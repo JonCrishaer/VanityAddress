@@ -575,10 +575,10 @@
 
       const diff = calculateDifficulty(prefix, suffix, caseSensitive);
       if (diff) {
-        const estTime = diff.combinations / 40000;
+        const estTime = diff.combinations / 8000;
         difficultyEl.innerHTML = `
           <strong>Difficulty:</strong> ~1 in ${formatNumber(diff.combinations)} chance<br>
-          <strong>Estimated time:</strong> ${formatEstimatedTime(estTime)}
+          <strong>Estimated time:</strong> ${formatEstimatedTime(estTime)} (average)
         `;
       }
     }
