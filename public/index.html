@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solana Vanity Wallet Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a25;
+      --accent-primary: #9945FF;
+      --accent-secondary: #14F195;
+      --accent-gradient: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --text-muted: #606070;
+      --border-color: #2a2a3a;
+      --error: #ff4757;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px;
+      background-image: 
+        radial-gradient(ellipse at top, rgba(153, 69, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(20, 241, 149, 0.05) 0%, transparent 50%);
+    }
+
+    .container { width: 100%; max-width: 550px; }
+
+    header { text-align: center; margin-bottom: 30px; }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-gradient);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle { color: var(--text-secondary); font-size: 13px; margin-top: 6px; }
+
+    .badge {
+      display: inline-block;
+      background: rgba(20, 241, 149, 0.15);
+      color: var(--accent-secondary);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 10px;
+      border: 1px solid rgba(20, 241, 149, 0.3);
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .input-group { margin-bottom: 14px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+      transition: all 0.2s ease;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.15);
+    }
+
+    input[type="text"]::placeholder { color: var(--text-muted); }
+
+    .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+    .input-error { color: var(--error); }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-primary);
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(153, 69, 255, 0.3);
+    }
+
+    .btn-stop { background: var(--error); color: white; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat-item {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .stat-value.highlight { color: var(--accent-secondary); }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, rgba(153, 69, 255, 0.1) 0%, rgba(20, 241, 149, 0.1) 100%);
+      border: 1px solid var(--accent-primary);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .success-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bg-primary);
+      font-size: 16px;
+    }
+
+    .result-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-secondary);
+    }
+
+    .key-display { margin-bottom: 14px; }
+
+    .key-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .key-value {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    .key-value .match {
+      color: var(--accent-secondary);
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .copy-btn.copied {
+      background: var(--accent-secondary);
+      color: var(--bg-primary);
+      border-color: var(--accent-secondary);
+    }
+
+    .warning-box {
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid var(--error);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 14px;
+    }
+
+    .warning-box p {
+      font-size: 12px;
+      color: var(--error);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-gradient);
+      animation: progress-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes progress-pulse {
+      0%, 100% { width: 20%; margin-left: 0; }
+      50% { width: 40%; margin-left: 60%; }
+    }
+
+    .difficulty-indicator {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .difficulty-indicator strong { color: var(--text-primary); }
+
+    .hidden { display: none !important; }
+
+    .download-btn {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .download-btn:hover { background: var(--border-color); }
+
+    .import-section {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .import-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .import-list {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">◎</div>
+        <h1>Vanity Wallet Generator</h1>
+      </div>
+      <p class="subtitle">Generate custom Solana addresses with your own prefix or suffix</p>
+      <span class="badge">✓ Real Solana Keypairs</span>
+    </header>
+
+    <div class="card">
+      <div class="card-title">Customize Your Address</div>
+      
+      <div class="input-group">
+        <label for="prefix">Prefix (start of address)</label>
+        <input type="text" id="prefix" placeholder="e.g., Sol" maxlength="5">
+        <p class="input-hint" id="prefixHint">Address will start with your prefix</p>
+      </div>
+
+      <div class="input-group">
+        <label for="suffix">Suffix (end of address)</label>
+        <input type="text" id="suffix" placeholder="e.g., pump" maxlength="5">
+        <p class="input-hint" id="suffixHint">Address will end with your suffix</p>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="caseSensitive">
+        <label class="checkbox-label" for="caseSensitive">Case sensitive matching</label>
+      </div>
+
+      <div class="difficulty-indicator" id="difficulty">
+        Enter a prefix or suffix to see estimated difficulty
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="generateBtn">
+      <span id="btnIcon">⚡</span>
+      <span id="btnText">Start Generating</span>
+    </button>
+
+    <div class="card hidden" id="statsCard">
+      <div class="card-title">Generation Stats</div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="attempts">0</div>
+          <div class="stat-label">Attempts</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value highlight" id="speed">0</div>
+          <div class="stat-label">Keys/sec</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="elapsed">0:00</div>
+          <div class="stat-label">Elapsed</div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="card result-card hidden" id="resultCard">
+      <div class="result-header">
+        <div class="success-icon">✓</div>
+        <div class="result-title">Wallet Found!</div>
+      </div>
+
+      <div class="key-display">
+        <div class="key-label">
+          <span>Public Key (Address)</span>
+          <button class="copy-btn" id="copyPublic">Copy</button>
+        </div>
+        <div class="key-value" id="publicKey"></div>
+      </div>
+
+      <div class="key-display">
+        <div class="key-label">
+          <span>Private Key (Base58)</span>
+          <button class="copy-btn" id="copyPrivate">Copy</button>
+        </div>
+        <div class="key-value" id="privateKey"></div>
+      </div>
+
+      <button class="download-btn" id="downloadBtn">📥 Download Keypair JSON</button>
+
+      <div class="import-section">
+        <div class="import-title">Import Instructions:</div>
+        <div class="import-list">
+          • <strong>Phantom:</strong> Settings → Security → Import Private Key<br>
+          • <strong>Solflare:</strong> Add Wallet → Import → Private Key<br>
+          • <strong>CLI:</strong> Use secretKey array with @solana/web3.js
+        </div>
+      </div>
+
+      <div class="warning-box">
+        <p>
+          <span>⚠️</span>
+          <span>Save your private key securely! Never share it with anyone.</span>
+        </p>
+      </div>
+    </div>
+
+    <footer>
+      <p>Real Solana Ed25519 keypairs • @solana/web3.js</p>
+    </footer>
+  </div>
+
+  <script>
+    const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+    let isGenerating = false;
+    let abortController = null;
+    let foundKeypair = null;
+    let totalAttempts = 0;
+    let startTime = null;
+
+    const prefixInput = document.getElementById('prefix');
+    const suffixInput = document.getElementById('suffix');
+    const caseSensitiveCheckbox = document.getElementById('caseSensitive');
+    const generateBtn = document.getElementById('generateBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnText = document.getElementById('btnText');
+    const statsCard = document.getElementById('statsCard');
+    const resultCard = document.getElementById('resultCard');
+
+    function isValidBase58(str) {
+      if (!str) return true;
+      return str.split('').every(char => BASE58_ALPHABET.includes(char));
+    }
+
+    function calculateDifficulty(prefix, suffix, caseSensitive) {
+      const totalLength = (prefix?.length || 0) + (suffix?.length || 0);
+      if (totalLength === 0) return null;
+      const base = caseSensitive ? 58 : 34;
+      return { combinations: Math.pow(base, totalLength) };
+    }
+
+    function formatNumber(num) {
+      if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+      return num.toString();
+    }
+
+    function formatTime(seconds) {
+      if (seconds < 60) return `0:${Math.floor(seconds).toString().padStart(2, '0')}`;
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function formatEstimatedTime(seconds) {
+      if (seconds < 1) return 'instant';
+      if (seconds < 60) return `~${Math.ceil(seconds)} seconds`;
+      if (seconds < 3600) return `~${Math.ceil(seconds / 60)} minutes`;
+      if (seconds < 86400) return `~${Math.ceil(seconds / 3600)} hours`;
+      return `~${Math.ceil(seconds / 86400)} days`;
+    }
+
+    function updateDifficulty() {
+      const prefix = prefixInput.value;
+      const suffix = suffixInput.value;
+      const caseSensitive = caseSensitiveCheckbox.checked;
+
+      const prefixValid = isValidBase58(prefix);
+      const suffixValid = isValidBase58(suffix);
+
+      document.getElementById('prefixHint').className = 'input-hint' + (prefix && !prefixValid ? ' input-error' : '');
+      document.getElementById('prefixHint').textContent = prefix && !prefixValid ? 
+        'Invalid chars. Use: 1-9, A-H, J-N, P-Z, a-k, m-z' : 'Address will start with your prefix';
+
+      document.getElementById('suffixHint').className = 'input-hint' + (suffix && !suffixValid ? ' input-error' : '');
+      document.getElementById('suffixHint').textContent = suffix && !suffixValid ? 
+        'Invalid chars. Use: 1-9, A-H, J-N, P-Z, a-k, m-z' : 'Address will end with your suffix';
+
+      generateBtn.disabled = (!prefix && !suffix) || (prefix && !prefixValid) || (suffix && !suffixValid);
+
+      const difficultyEl = document.getElementById('difficulty');
+      if (!prefix && !suffix) {
+        difficultyEl.innerHTML = 'Enter a prefix or suffix to see estimated difficulty';
+        return;
+      }
+
+      if ((prefix && !prefixValid) || (suffix && !suffixValid)) {
+        difficultyEl.innerHTML = 'Please fix invalid characters above';
+        return;
+      }
+
+      const diff = calculateDifficulty(prefix, suffix, caseSensitive);
+      if (diff) {
+        const estTime = diff.combinations / 40000;
+        difficultyEl.innerHTML = `
+          <strong>Difficulty:</strong> ~1 in ${formatNumber(diff.combinations)} chance<br>
+          <strong>Estimated time:</strong> ${formatEstimatedTime(estTime)}
+        `;
+      }
+    }
+
+    function updateStats() {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const speed = elapsed > 0 ? Math.round(totalAttempts / elapsed) : 0;
+      
+      document.getElementById('attempts').textContent = formatNumber(totalAttempts);
+      document.getElementById('speed').textContent = formatNumber(speed);
+      document.getElementById('elapsed').textContent = formatTime(elapsed);
+    }
+
+    async function generateVanity() {
+      const prefix = prefixInput.value;
+      const suffix = suffixInput.value;
+      const caseSensitive = caseSensitiveCheckbox.checked;
+
+      try {
+        const response = await fetch('/api/vanity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prefix, suffix, caseSensitive, maxAttempts: 500000 }),
+          signal: abortController?.signal
+        });
+
+        const data = await response.json();
+        totalAttempts += data.attempts;
+        updateStats();
+
+        if (data.found) {
+          foundKeypair = data;
+          stopGeneration(true);
+        } else if (isGenerating) {
+          generateVanity();
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Generation error:', err);
+          stopGeneration(false);
+        }
+      }
+    }
+
+    function toggleGeneration() {
+      if (isGenerating) {
+        stopGeneration(false);
+      } else {
+        startGeneration();
+      }
+    }
+
+    function startGeneration() {
+      isGenerating = true;
+      totalAttempts = 0;
+      startTime = Date.now();
+      foundKeypair = null;
+      abortController = new AbortController();
+
+      generateBtn.className = 'btn btn-stop';
+      btnIcon.textContent = '⏹';
+      btnText.textContent = 'Stop Generating';
+      statsCard.classList.remove('hidden');
+      resultCard.classList.add('hidden');
+
+      prefixInput.disabled = true;
+      suffixInput.disabled = true;
+      caseSensitiveCheckbox.disabled = true;
+
+      window.statsInterval = setInterval(updateStats, 100);
+      generateVanity();
+    }
+
+    function stopGeneration(found) {
+      isGenerating = false;
+      
+      if (abortController) {
+        abortController.abort();
+        abortController = null;
+      }
+
+      if (window.statsInterval) {
+        clearInterval(window.statsInterval);
+      }
+
+      updateStats();
+
+      generateBtn.className = 'btn btn-primary';
+      btnIcon.textContent = '⚡';
+      btnText.textContent = 'Start Generating';
+
+      prefixInput.disabled = false;
+      suffixInput.disabled = false;
+      caseSensitiveCheckbox.disabled = false;
+
+      if (found && foundKeypair) {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const prefix = prefixInput.value;
+      const suffix = suffixInput.value;
+      const pubKey = foundKeypair.publicKey;
+
+      resultCard.classList.remove('hidden');
+
+      let highlighted = '';
+      const prefixLen = prefix ? prefix.length : 0;
+      const suffixLen = suffix ? suffix.length : 0;
+
+      if (prefix && suffix) {
+        highlighted = `<span class="match">${pubKey.substring(0, prefixLen)}</span>` +
+                      pubKey.substring(prefixLen, pubKey.length - suffixLen) +
+                      `<span class="match">${pubKey.substring(pubKey.length - suffixLen)}</span>`;
+      } else if (prefix) {
+        highlighted = `<span class="match">${pubKey.substring(0, prefixLen)}</span>` + pubKey.substring(prefixLen);
+      } else if (suffix) {
+        highlighted = pubKey.substring(0, pubKey.length - suffixLen) +
+                      `<span class="match">${pubKey.substring(pubKey.length - suffixLen)}</span>`;
+      } else {
+        highlighted = pubKey;
+      }
+
+      document.getElementById('publicKey').innerHTML = highlighted;
+      document.getElementById('privateKey').textContent = foundKeypair.privateKey;
+    }
+
+    async function copyToClipboard(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          button.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+    }
+
+    function downloadKeypair() {
+      if (!foundKeypair) return;
+
+      const data = {
+        publicKey: foundKeypair.publicKey,
+        privateKey: foundKeypair.privateKey,
+        secretKey: foundKeypair.secretKey,
+        generatedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `solana-vanity-${foundKeypair.publicKey.substring(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    prefixInput.addEventListener('input', updateDifficulty);
+    suffixInput.addEventListener('input', updateDifficulty);
+    caseSensitiveCheckbox.addEventListener('change', updateDifficulty);
+    generateBtn.addEventListener('click', toggleGeneration);
+
+    document.getElementById('copyPublic').addEventListener('click', function() {
+      copyToClipboard(foundKeypair.publicKey, this);
+    });
+
+    document.getElementById('copyPrivate').addEventListener('click', function() {
+      copyToClipboard(foundKeypair.privateKey, this);
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', downloadKeypair);
+
+    updateDifficulty();
+  </script>
+</body>
+</html>
