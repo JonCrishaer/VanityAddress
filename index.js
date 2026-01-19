@@ -34,9 +34,9 @@ app.get('/api/generate', (req, res) => {
   });
 });
 
-// Vanity address generation
-app.post('/api/vanity', (req, res) => {
-  const { prefix, suffix, caseSensitive, maxAttempts = 500000 } = req.body;
+// Vanity address generation - async chunked to prevent blocking
+app.post('/api/vanity', async (req, res) => {
+  const { prefix, suffix, caseSensitive, maxAttempts = 100000 } = req.body;
 
   if (!prefix && !suffix) {
     return res.status(400).json({ error: 'Prefix or suffix required' });
@@ -53,35 +53,49 @@ app.post('/api/vanity', (req, res) => {
     return res.status(400).json({ error: 'Invalid Base58 characters. Avoid: 0, O, I, l' });
   }
 
+  const pre = caseSensitive ? (prefix || '') : (prefix || '').toLowerCase();
+  const suf = caseSensitive ? (suffix || '') : (suffix || '').toLowerCase();
+
   function matchesPattern(address) {
-    let addr = address;
-    let pre = prefix || '';
-    let suf = suffix || '';
-
-    if (!caseSensitive) {
-      addr = addr.toLowerCase();
-      pre = pre.toLowerCase();
-      suf = suf.toLowerCase();
-    }
-
+    const addr = caseSensitive ? address : address.toLowerCase();
     return (!pre || addr.startsWith(pre)) && (!suf || addr.endsWith(suf));
   }
 
+  const BATCH_SIZE = 1000;
   const startTime = Date.now();
   let attempts = 0;
 
-  while (attempts < maxAttempts) {
-    const keypair = Keypair.generate();
-    const publicKey = keypair.publicKey.toBase58();
-    attempts++;
+  const processChunk = () => {
+    return new Promise((resolve) => {
+      setImmediate(() => {
+        for (let i = 0; i < BATCH_SIZE && attempts < maxAttempts; i++) {
+          const keypair = Keypair.generate();
+          const publicKey = keypair.publicKey.toBase58();
+          attempts++;
 
-    if (matchesPattern(publicKey)) {
+          if (matchesPattern(publicKey)) {
+            resolve({
+              found: true,
+              keypair,
+              publicKey
+            });
+            return;
+          }
+        }
+        resolve({ found: false });
+      });
+    });
+  };
+
+  while (attempts < maxAttempts) {
+    const result = await processChunk();
+    if (result.found) {
       const elapsed = (Date.now() - startTime) / 1000;
       return res.json({
         found: true,
-        publicKey: publicKey,
-        privateKey: bs58.encode(keypair.secretKey),
-        secretKey: Array.from(keypair.secretKey),
+        publicKey: result.publicKey,
+        privateKey: bs58.encode(result.keypair.secretKey),
+        secretKey: Array.from(result.keypair.secretKey),
         attempts,
         timeSeconds: elapsed,
         speed: Math.round(attempts / elapsed)
